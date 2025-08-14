@@ -2,8 +2,6 @@ const std = @import("std");
 const testing = std.testing;
 const Allocator = std.mem.Allocator;
 
-const PositionError = error{};
-
 /// Position is a location in the source code.
 pub const Position = struct {
     /// The number of chars since the start of the source code. (0-based)
@@ -27,9 +25,9 @@ pub const Position = struct {
     ///
     /// Returns:
     /// * Self - A new Position
-    pub fn init(offset: u32, line_offset: u32, line: u32, column: u32) PositionError!Self {
-        // TODO: ensure column number is (offset - lineoffset) + 1
-        // TODO: ensure that offset >= lineoffset
+    pub fn init(offset: u32, line_offset: u32, line: u32, column: u32) Self {
+        std.debug.assert(offset >= line_offset); // Invariant: The offset must always be greater or equal to the line offset.
+        std.debug.assert(column == (offset - line_offset) + 1); // Invariant: The column is always 1-based from the start of the line offset.
 
         return Position{
             .offset = offset,
@@ -50,11 +48,6 @@ pub const Position = struct {
     }
 };
 
-pub const SpanError = error{
-    InvalidSpan,
-    OutOfOrder,
-};
-
 /// Span is a grouping of source code over a given range.
 pub const Span = struct {
     /// The starting point for the portion of source code.
@@ -72,10 +65,8 @@ pub const Span = struct {
     ///
     /// Returns:
     /// * Self - A new Span.
-    pub fn init(start: Position, end: Position) SpanError!Self {
-        if (start.offset > end.offset) {
-            return SpanError.OutOfOrder;
-        }
+    pub fn init(start: Position, end: Position) Self {
+        std.debug.assert(start.offset <= end.offset);
 
         return Span{
             .start = start,
@@ -90,39 +81,23 @@ pub const Span = struct {
     ///
     /// Returns:
     /// * []const u8 - The lexeme of the source code for the given span.
-    pub fn slice(self: *Self, source: []const u8) SpanError![]const u8 {
-        if (self.end.offset >= source.len) {
-            return SpanError.InvalidSpan;
-        }
+    pub fn slice(self: *Self, source: []const u8) []const u8 {
+        std.debug.assert(self.end.offset < source.len);
 
         return source[self.start.offset .. self.end.offset + 1];
     }
 };
 
-test "Span with backwards positions produces error" {
-    try testing.expectError(SpanError.OutOfOrder, Span.init(try Position.init(1, 0, 1, 2), Position.default()));
-}
-
 test "Span can slice source code from start" {
     const source = "fun add(a, b) { return a + b; }";
-    var mySpan = try Span.init(Position.default(), try Position.init(6, 0, 1, 7));
-    const sliced = try mySpan.slice(source);
+    var mySpan = Span.init(Position.default(), Position.init(6, 0, 1, 7));
+    const sliced = mySpan.slice(source);
     try testing.expectEqualStrings("fun add", sliced);
 }
 
 test "Span can slice source code from end" {
     const source = "fun add(a, b) { return a + b; }";
-    var mySpan = try Span.init(try Position.init(14, 0, 1, 15), try Position.init(30, 0, 1, 31));
-    const sliced = try mySpan.slice(source);
+    var mySpan = Span.init(Position.init(14, 0, 1, 15), Position.init(30, 0, 1, 31));
+    const sliced = mySpan.slice(source);
     try testing.expectEqualStrings("{ return a + b; }", sliced);
-}
-
-test "Span returns error when slicing beyond end" {
-    const source = "fun add(a, b) { return a + b; }";
-    var mySpan = try Span.init(try Position.init(14, 0, 1, 15), try Position.init(31, 0, 1, 32));
-    try testing.expectError(SpanError.InvalidSpan, mySpan.slice(source));
-}
-
-test "fail" {
-    try testing.expectEqual(1, 2);
 }
