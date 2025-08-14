@@ -5,13 +5,13 @@ const Allocator = std.mem.Allocator;
 /// Position is a location in the source code.
 pub const Position = struct {
     /// The number of chars since the start of the source code. (0-based)
-    offset: u32,
+    offset: usize,
     /// The number of chars since the start of the current line. (0-based)
-    line_offset: u32,
+    line_offset: usize,
     /// The line number in the source code. (1-based)
-    line: u32,
+    line: usize,
     /// The column in the current line. (1-based)
-    column: u32,
+    column: usize,
 
     const Self = @This();
 
@@ -25,7 +25,7 @@ pub const Position = struct {
     ///
     /// Returns:
     /// * Self - A new Position
-    pub fn init(offset: u32, line_offset: u32, line: u32, column: u32) Self {
+    pub fn init(offset: usize, line_offset: usize, line: usize, column: usize) Self {
         std.debug.assert(offset >= line_offset); // Invariant: The offset must always be greater or equal to the line offset.
         std.debug.assert(column == (offset - line_offset) + 1); // Invariant: The column is always 1-based from the start of the line offset.
 
@@ -82,8 +82,7 @@ pub const Span = struct {
     /// Returns:
     /// * []const u8 - The lexeme of the source code for the given span.
     pub fn slice(self: *Self, source: []const u8) []const u8 {
-        std.debug.assert(self.end.offset < source.len);
-
+        std.debug.assert(self.end.offset < source.len); // Invariant: The span end offset must never be greater or equal to the source code length.
         return source[self.start.offset .. self.end.offset + 1];
     }
 };
