@@ -1,0 +1,97 @@
+// Top-level program
+program        ::= { statement }
+
+// Statements
+statement      ::= expression_stmt
+                 | if_stmt
+                 | while_stmt
+                 | for_stmt
+                 | return_stmt
+                 | class_decl
+                 | comment
+                 | block
+
+expression_stmt ::= expression ";"
+
+return_stmt    ::= "return" expression ";"
+
+if_stmt       ::= "if" "(" expression ")" block
+                 { "else" "if" "(" expression ")" block }
+                 [ "else" block ]
+
+while_stmt    ::= "while" "(" expression ")" block
+
+for_stmt      ::= "for" "(" [ expression_stmt ] [ expression ] ";" [ expression ] ")" block
+
+block         ::= "{" { statement } "}"
+
+// Classes
+class_decl    ::= "class" identifier "{" constructor_decl { method_decl } "}"
+
+constructor_decl ::= "fun" "new" "(" [ parameter_list ] ")" block
+
+method_decl   ::= "fun" identifier "(" [ parameter_list ] ")" block
+
+// Expressions
+expression    ::= assignment
+
+assignment    ::= ( identifier | property_access ) "=" expression
+                 | logic_or
+
+property_access ::= "this" "." identifier
+
+logic_or      ::= logic_and { "or" logic_and }
+
+logic_and     ::= equality { "and" equality }
+
+equality      ::= comparison { ( "==" | "!=" ) comparison }
+
+comparison    ::= term { ( ">" | ">=" | "<" | "<=" ) term }
+
+term          ::= factor { ( "+" | "-" ) factor }
+
+factor        ::= unary { ( "*" | "/" ) unary }
+
+unary         ::= ( "not" | "-" ) unary
+                 | call
+
+call          ::= primary { "(" [ argument_list ] ")" }
+
+argument_list ::= expression { "," expression }
+
+// Primary expressions
+primary       ::= number
+                 | string
+                 | "true"
+                 | "false"
+                 | "none"
+                 | identifier
+                 | "(" expression ")"
+                 | function_expr
+
+function_expr ::= "fun" "(" [ parameter_list ] ")" block
+
+// Parameters with optional type annotations
+parameter_list ::= parameter { "," parameter }
+
+parameter     ::= identifier [ ":" type ]
+
+type          ::= identifier
+
+// Identifiers and literals
+identifier    ::= letter { letter | digit | "_" }
+
+number        ::= digit { digit } [ "." digit { digit } ]
+
+string        ::= '"' { any_character_except_quote_or_backslash | escape_sequence | newline } '"'
+
+// Comments
+comment       ::= "//" { any_character_except_newline } newline
+
+// Letters and digits
+letter        ::= "A" … "Z" | "a" … "z"
+
+digit         ::= "0" … "9"
+
+// Escape sequences (within strings)
+escape_sequence ::= "\\" ( "n" | "t" | "\\" | "\"" | "r" )

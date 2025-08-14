@@ -1,0 +1,42 @@
+// Example 1: Empty class with an empty constructor
+class Empty {
+    // Every class must have a constructor named "new"
+    // Here the constructor takes no parameters and does nothing
+    fun new() {
+        // No properties assigned; this class holds no data
+    }
+}
+
+// Example 2: Class with constructor parameters and property assignments
+class Person {
+    // Constructor 'new' defines parameters and assigns properties on 'this'
+    fun new(name, age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    // Instance method accessing 'this' properties
+    fun sayHi() {
+        return "Hello, I'm " + this.name + " and I'm " + this.age + " years old!";
+    }
+}
+
+// Example 3: Class with an empty constructor but instance methods
+class Logger {
+    fun new() {
+        // No data members, but methods still available
+    }
+
+    fun log(message) {
+        print("[LOG] " + message);
+    }
+}
+
+// Usage examples:
+
+let emptyInstance = Empty();
+let alice = Person("Alice", 30);
+print(alice.sayHi()); // Outputs: Hello, I'm Alice and I'm 30 years old!
+
+let logger = Logger();
+logger.log("This is a test log."); // Outputs: [LOG] This is a test log.

@@ -1,0 +1,52 @@
+// Simple Bank Account example
+
+class BankAccount {
+    fun new(owner, initialBalance) {
+        this.owner = owner;
+        this.balance = initialBalance;
+    }
+
+    fun deposit(amount) {
+        if (amount <= 0) {
+            print("Deposit amount must be positive.");
+            return;
+        }
+        this.balance = this.balance + amount;
+        print(amount + " deposited. New balance: " + this.balance);
+        return;
+    }
+
+    fun withdraw(amount) {
+        if (amount <= 0) {
+            print("Withdrawal amount must be positive.");
+            return;
+        }
+        if (amount > this.balance) {
+            print("Insufficient funds!");
+            return;
+        }
+        this.balance = this.balance - amount;
+        print(amount + " withdrawn. New balance: " + this.balance);
+        return;
+    }
+
+    fun getBalance() {
+        return this.balance;
+    }
+
+    fun sayOwner() {
+        return "Account owner: " + this.owner;
+    }
+}
+
+// Usage:
+
+let myAccount = BankAccount("Jake", 1000);
+
+print(myAccount.sayOwner());
+print("Current balance: " + myAccount.getBalance());
+
+myAccount.deposit(500);
+myAccount.withdraw(200);
+myAccount.withdraw(2000);  // Should print insufficient funds
+print("Final balance: " + myAccount.getBalance());
