@@ -1,5 +1,6 @@
 const std = @import("std");
 const testing = std.testing;
+
 const Allocator = std.mem.Allocator;
 
 /// Position is a location in the source code.

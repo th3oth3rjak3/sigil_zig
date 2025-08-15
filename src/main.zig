@@ -18,7 +18,11 @@ pub fn main() !void {
 
 test "main tests" {
     _ = @import("common.zig");
+    _ = @import("compiling.zig");
     _ = @import("error_handling.zig");
     _ = @import("lexing.zig");
+    _ = @import("memory.zig");
     _ = @import("parsing.zig");
+    _ = @import("runtime.zig");
+    _ = @import("source_loading.zig");
 }
