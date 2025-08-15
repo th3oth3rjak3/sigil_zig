@@ -66,7 +66,8 @@ pub const Span = struct {
     /// Returns:
     /// * Self - A new Span.
     pub fn init(start: Position, end: Position) Self {
-        std.debug.assert(start.offset <= end.offset);
+        std.debug.assert(start.offset <= end.offset); // Invariant: The start should always come before the end.
+        std.debug.assert(start.line <= end.line); // Invariant: The start line must be less than or equal to the end line.
 
         return Span{
             .start = start,
@@ -81,9 +82,29 @@ pub const Span = struct {
     ///
     /// Returns:
     /// * []const u8 - The lexeme of the source code for the given span.
-    pub fn slice(self: *Self, source: []const u8) []const u8 {
+    pub fn slice(self: Self, source: []const u8) []const u8 {
         std.debug.assert(self.end.offset < source.len); // Invariant: The span end offset must never be greater or equal to the source code length.
         return source[self.start.offset .. self.end.offset + 1];
+    }
+
+    /// Slice into the source code and return the entire line of source code starting
+    /// from the span's start line number. For example, if the span starts at line 3,
+    /// get all of line 3 and return it.
+    ///
+    /// Params:
+    /// * source - The source code that is being compiled.
+    ///
+    /// Returns:
+    /// * []const u8 - The line of source code at the span's start line.
+    pub fn sliceLine(self: Self, source: []const u8) []const u8 {
+        const start = self.start.line_offset;
+        var end = start;
+
+        while (end < source.len and source[end] != '\n') {
+            end += 1;
+        }
+
+        return source[start..end];
     }
 };
 
