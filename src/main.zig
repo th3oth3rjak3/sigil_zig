@@ -168,4 +168,5 @@ test "main tests" {
     _ = @import("parsing.zig");
     _ = @import("runtime.zig");
     _ = @import("source_loading.zig");
+    _ = @import("tokens.zig");
 }

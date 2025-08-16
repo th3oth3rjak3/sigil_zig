@@ -1,8 +1,8 @@
 const std = @import("std");
-const common = @import("common.zig");
-
 const Allocator = std.mem.Allocator;
 const ArrayList = std.ArrayList;
+
+const common = @import("common.zig");
 const Span = common.Span;
 const Position = common.Position;
 
