@@ -1,0 +1,5 @@
+// I'm a main file!
+
+fun main() {
+    print("Hello!");
+}

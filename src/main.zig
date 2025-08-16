@@ -1,19 +1,162 @@
 const std = @import("std");
 
+const Allocator = std.mem.Allocator;
+const print = std.debug.print;
+
+const Command = enum {
+    repl,
+    run,
+    help,
+};
+
+const RunTarget = union(enum) {
+    directory: []u8,
+    file: []u8,
+};
+
+const Args = struct {
+    command: Command,
+    run_target: ?RunTarget = null,
+};
+
 pub fn main() !void {
-    // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
-    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
+    var gpa = std.heap.GeneralPurposeAllocator(.{}).init;
+    defer {
+        const result = gpa.deinit();
 
-    // stdout is for the actual output of your application, for example if you
-    // are implementing gzip, then only the compressed bytes should be sent to
-    // stdout, not any debugging messages.
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
+        print("\n\n============== LEAK SUMMARY ==============\n", .{});
 
-    try stdout.print("Run `zig build test` to run the tests.\n", .{});
+        if (result == .leak) {
+            print("Allocator leaked!\n", .{});
+        } else {
+            print("No leaks detected!\n", .{});
+        }
 
-    try bw.flush(); // Don't forget to flush!
+        print("\n", .{});
+    }
+    const allocator = gpa.allocator();
+
+    const parsed_args = parseArgs(allocator) catch |err| switch (err) {
+        error.MissingCommand, error.UnknownCommand, error.UnexpectedArgument, error.MissingPath, error.PathNotFound, error.InvalidPathType => return, // Error already printed
+        else => return err,
+    };
+
+    switch (parsed_args.command) {
+        .help => printUsage(), // Already handled in parseArgs
+        .repl => try handleRepl(),
+        .run => {
+            if (parsed_args.run_target) |target| {
+                switch (target) {
+                    .directory => |path| {
+                        try handleRunDirectory(allocator, path);
+                    },
+                    .file => |path| {
+                        try handleRunFile(allocator, path);
+                    },
+                }
+            }
+        },
+    }
+}
+
+fn parseArgs(allocator: std.mem.Allocator) !Args {
+    var args = try std.process.argsWithAllocator(allocator);
+    defer args.deinit();
+
+    // Skip program name
+    _ = args.skip();
+
+    const command_str = args.next() orelse {
+        print("Error: No command provided\n", .{});
+        printUsage();
+        return error.MissingCommand;
+    };
+
+    const command = std.meta.stringToEnum(Command, command_str) orelse {
+        print("Error: Unknown command '{s}'\n", .{command_str});
+        printUsage();
+        return error.UnknownCommand;
+    };
+
+    switch (command) {
+        .help => {
+            return Args{ .command = .help };
+        },
+        .repl => {
+            // Check if there are unexpected additional arguments
+            if (args.next()) |extra| {
+                print("Error: Unexpected argument '{s}' for repl command\n", .{extra});
+                return error.UnexpectedArgument;
+            }
+            return Args{ .command = .repl };
+        },
+        .run => {
+            const path = args.next() orelse {
+                print("Error: 'run' command requires a path argument\n", .{});
+                printUsage();
+                return error.MissingPath;
+            };
+
+            // Check if there are unexpected additional arguments
+            if (args.next()) |extra| {
+                print("Error: Unexpected argument '{s}' for run command\n", .{extra});
+                return error.UnexpectedArgument;
+            }
+
+            // Determine if it's a directory or file
+            const cwd = std.fs.cwd();
+            const stat = cwd.statFile(path) catch |err| switch (err) {
+                error.FileNotFound => {
+                    print("Error: Path '{s}' not found\n", .{path});
+                    return error.PathNotFound;
+                },
+                else => return err,
+            };
+
+            const target = switch (stat.kind) {
+                .directory => RunTarget{ .directory = try allocator.dupe(u8, path) },
+                .file => RunTarget{ .file = try allocator.dupe(u8, path) },
+                else => {
+                    print("Error: Path '{s}' is not a file or directory\n", .{path});
+                    return error.InvalidPathType;
+                },
+            };
+
+            return Args{ .command = .run, .run_target = target };
+        },
+    }
+}
+
+fn printUsage() void {
+    print("Sigil Programming Language Interpreter\n", .{});
+    print("\n", .{});
+    print("Usage: sigil <command> [args]\n", .{});
+    print("\nCommands:\n", .{});
+    print("  repl           Start the REPL\n", .{});
+    print("  run <path>     Run a file or directory\n", .{});
+    print("  help           Show this help message\n", .{});
+    print("\nExamples:\n", .{});
+    print("  sigil repl\n", .{});
+    print("  sigil run .            # Looks for main.sgl in the provided directory\n", .{});
+    print("  sigil run ./hello.sgl  # Runs the file directly\n", .{});
+}
+
+fn handleRepl() !void {
+    print("Starting REPL...\n", .{});
+    // TODO: Implement REPL
+}
+
+fn handleRunDirectory(allocator: Allocator, path: []u8) !void {
+    defer allocator.free(path);
+    print("Running directory: {s}\n", .{path});
+    print("Looking for main.sgl...\n", .{});
+    // TODO: Find and run main.sgl
+}
+
+fn handleRunFile(allocator: Allocator, path: []u8) !void {
+    defer allocator.free(path);
+    print("Running file: {s}\n", .{path});
+    // TODO: Run the specified file
 }
 
 test "main tests" {
