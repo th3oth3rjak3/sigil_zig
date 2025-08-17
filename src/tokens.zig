@@ -19,12 +19,13 @@ pub const TokenKind = enum {
     Return,
     True,
     False,
-    Nil,
+    None,
     Break,
     Continue,
     Class,
     Super,
     This,
+    New,
 
     // Operators
     Plus,
@@ -41,6 +42,7 @@ pub const TokenKind = enum {
     GreaterEqual,
     And,
     Or,
+    Not,
 
     // Punctuation
     LeftParen,
@@ -57,6 +59,7 @@ pub const TokenKind = enum {
     // Special
     EOF,
     Error,
+    Print,
 };
 
 pub const Token = struct {
@@ -75,11 +78,14 @@ pub const KEYWORDS = std.StaticStringMap(TokenKind).initComptime(
         .{ "return", .Return },
         .{ "true", .True },
         .{ "false", .False },
-        .{ "nil", .Nil },
+        .{ "none", .None },
         .{ "break", .Break },
         .{ "continue", .Continue },
         .{ "class", .Class },
         .{ "super", .Super },
         .{ "this", .This },
+        .{ "not", .Not },
+        .{ "new", .New },
+        .{ "print", .Print },
     },
 );

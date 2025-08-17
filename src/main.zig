@@ -1,6 +1,15 @@
 const std = @import("std");
+const source_loader = @import("source_loading.zig");
+const compiling = @import("compiling.zig");
+const runtime = @import("runtime.zig");
+const memory = @import("memory.zig");
+const disassembler = @import("disassembler.zig");
 
+const Compiler = compiling.Compiler;
 const Allocator = std.mem.Allocator;
+const Chunk = runtime.Chunk;
+const VM = runtime.VM;
+const GC = memory.GC;
 const print = std.debug.print;
 
 const Command = enum {
@@ -155,13 +164,33 @@ fn handleRunDirectory(allocator: Allocator, path: []u8) !void {
 
 fn handleRunFile(allocator: Allocator, path: []u8) !void {
     defer allocator.free(path);
-    print("Running file: {s}\n", .{path});
-    // TODO: Run the specified file
+    const source = try source_loader.loadFile(allocator, @constCast(path));
+    defer allocator.free(source);
+    var chunk = Chunk.init(allocator);
+    defer chunk.deinit();
+    var gc = GC.init(allocator);
+    defer gc.deinit();
+
+    var compiler = Compiler.init(allocator, &gc, @constCast(source), &chunk);
+    defer compiler.deinit();
+    const succeeded = try compiler.compile();
+    if (!succeeded) {
+        return;
+    }
+
+    // Add disassembly output
+    // disassembler.disassembleChunk(&chunk, path);
+
+    var vm = VM.init(allocator, &gc, &chunk);
+    defer vm.deinit();
+    try vm.interpret();
 }
 
 test "main tests" {
+    _ = @import("ast.zig");
     _ = @import("common.zig");
     _ = @import("compiling.zig");
+    _ = @import("disassembler.zig");
     _ = @import("error_handling.zig");
     _ = @import("lexing.zig");
     _ = @import("memory.zig");
@@ -169,4 +198,5 @@ test "main tests" {
     _ = @import("runtime.zig");
     _ = @import("source_loading.zig");
     _ = @import("tokens.zig");
+    _ = @import("values.zig");
 }
