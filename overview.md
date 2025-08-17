@@ -2,7 +2,7 @@
 
 ## Overview
 
-Sigil is a modern, dynamically-typed programming language with optional static typing, designed for clarity, expressiveness, and performance. It combines familiar and clean syntax with powerful features like first-class functions, classes, unions, and a flexible type system. Sigil compiles to a register-based bytecode executed by a custom virtual machine with automatic memory management.
+Sigil is a modern, dynamically-typed programming language with optional static typing, designed for clarity, expressiveness, and performance. It combines familiar and clean syntax with powerful features like first-class functions, classes, unions, and a flexible type system. Sigil compiles to a stack-based bytecode executed by a custom virtual machine with automatic memory management.
 
 ---
 
@@ -10,29 +10,28 @@ Sigil is a modern, dynamically-typed programming language with optional static t
 
 ### 1. Syntax
 
-- Functions can be defined with either expression or block bodies:
+- Functions are defined with block bodies:
 
-      let add = fn(a, b) => a + b
-
-      fn add(a, b) {
+      fun add(a, b) {
           a + b
       }
 
 - Control structures use clear keywords and blocks:
 
-      if condition {
+      if (condition) {
           // true branch
-      } else if otherCondition {
+      } else if (otherCondition) {
           // else if branch
       } else {
           // else branch
       }
 
-- Looping uses a single `loop` keyword supporting different styles:
+- Looping is done with the traditional `while` and `for` loop keywords:
 
-      loop { /* infinite */ }
-      loop i in 1..=10 { print(i) }
-      loop i < 10 { print(i) }
+      while (true) { /* Infinite */ }
+      for (i = 0; i < 10; i = i + 1) {
+          // do something 10 times.
+      }
 
 ---
 
@@ -50,30 +49,39 @@ Sigil is a modern, dynamically-typed programming language with optional static t
 - Classes are declared with optional constructor parameters and a body initializing instance fields.
 - Single inheritance is supported with a `:` syntax:
 
-      let Person = class(name, age) : Animal {
-          this.name = name
-          this.age = age
-          super.legCount = 2  // call or assign to base constructor members
-          this.sayHi = fn() { ... }
-          static let greet = fn(name) => "Hi, " + name
+      class Person {
+          fun new(name, age) {
+              this.name = name;
+              this.age = age;
+          }
+
+          fun sayHi() {
+              return "Hello, I'm " + this.name + " and I'm " + this.age + " years old!"
+          }
       }
 
-- Methods use the `this` keyword; static methods use `static let`.
+      // usage:
+      john = Person("John", 25);
+      print(john.sayHi());
+
+- Methods use the `fun` keyword.
 
 ---
 
 ### 4. Functions
 
 - First-class, can be assigned to variables, passed as arguments, and returned.
-- All functions return the last expression’s value by default (no explicit `return` needed).
+- Functions return `none` when a return value is not provided. Otherwise, the `return` keyword is used to return a value.
 
 ---
 
 ### 5. Type System
 
-- **Optional static typing:** Types can be annotated in a TypeScript-like manner:
+- **Optional static typing:** Types can be annotated in the following manner:
 
-      let add = fn(a: Number, b: Number): Number => a + b
+      fun add(a: Number, b: Number): Number {
+          return a + b;
+      }
 
 - Typechecker validates annotations at compile time; if errors exist, compilation fails.
 - Code without annotations is dynamically typed, with runtime type checks.
@@ -83,8 +91,8 @@ Sigil is a modern, dynamically-typed programming language with optional static t
 
 ### 6. Virtual Machine
 
-- Executes a **register-based bytecode** designed for efficiency and clarity.
-- Registers hold **NaN-boxed 64-bit values** enabling compact and fast value representation.
+- Executes a **stack-based bytecode** designed for efficiency and clarity.
+- Stack holds Value types now, with future plans to move to **NaN-boxed 64-bit values** enabling compact and fast value representation.
 - Instruction set designed for arithmetic, control flow, function calls, and object operations.
 
 ---
@@ -93,15 +101,13 @@ Sigil is a modern, dynamically-typed programming language with optional static t
 
 - Uses a **mark-and-sweep stop-the-world garbage collector** implemented within the runtime.
 - All objects allocated on a managed heap tracked by the GC.
-- Roots include stack frames, global variables, and registers.
+- Roots include stack frames, global variables.
 
 ---
 
 ## Development Tools & Build System
 
-- Written primarily in C for portability and low-level control.
-- Uses **CMake** for build configuration and compilation.
-- Supports VSCode and CLion for development, with integration for IntelliSense and debugging.
+- Written in Zig for portability and low-level control.
 
 ---
 
