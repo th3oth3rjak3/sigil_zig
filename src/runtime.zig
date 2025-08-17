@@ -366,7 +366,10 @@ test "simple VM execution" {
     try chunk.writeOpcode(.op_add, 1);
     try chunk.writeOpcode(.op_return, 1);
 
-    var vm = VM.init(std.testing.allocator, &chunk);
+    var gc = GC.init(std.testing.allocator);
+    defer gc.deinit();
+
+    var vm = VM.init(std.testing.allocator, &gc, &chunk);
     try vm.interpret();
 
     // Result should be on stack
